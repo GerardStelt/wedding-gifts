@@ -37,6 +37,6 @@
   }
 }
 
-@utility elevation {
+@utility raised {
   @apply shadow-md hover:shadow-lg;
 }

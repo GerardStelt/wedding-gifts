@@ -11,7 +11,7 @@ export default component$(() => {
       <main class="flex-1">
         <Slot />
       </main>
-      <div>Footer</div>
+      <div class="bg-neutral-200"><div class="container">Footer</div></div>
     </div>
   );
 });
