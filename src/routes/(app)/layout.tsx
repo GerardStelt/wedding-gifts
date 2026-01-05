@@ -2,6 +2,7 @@ import { component$, Slot } from '@builder.io/qwik';
 import type { DocumentHead } from '@builder.io/qwik-city';
 
 import { Header } from '~/components/header/header';
+import { Footer } from '~/components/footer/footer';
 
 
 export default component$(() => {
@@ -11,7 +12,7 @@ export default component$(() => {
       <main class="flex-1">
         <Slot />
       </main>
-      <div class="bg-neutral-200"><div class="container">Footer</div></div>
+      <Footer />
     </div>
   );
 });
