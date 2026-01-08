@@ -85,3 +85,16 @@ export interface FranchiseeStats {
   thisMonthClients: number;
 }
 
+// Authentication types
+export type UserRole = 'client' | 'franchisee';
+
+export interface User {
+  id: string;
+  email: string;
+  role: UserRole;
+  name?: string;
+  // Additional fields based on role
+  clientId?: string; // For clients (brides)
+  franchiseeId?: string; // For franchisees
+}
+

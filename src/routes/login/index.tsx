@@ -1,15 +1,55 @@
 import { component$ } from '@builder.io/qwik';
 import { Form, routeAction$ } from '@builder.io/qwik-city';
+import { setUserSession } from '~/lib/auth/session';
+import type { User } from '~/lib/types';
+
+// Dummy accounts for testing
+const DUMMY_ACCOUNTS = {
+  // Client/Bride account
+  'bride@example.com': {
+    password: 'password',
+    role: 'client' as const,
+    name: 'Sophie de Vries',
+    id: 'client-1',
+  },
+  // Franchisee/Admin account
+  'franchisee@example.com': {
+    password: 'password',
+    role: 'franchisee' as const,
+    name: 'Wedding Dreams',
+    id: 'franchisee-1',
+  },
+};
 
 export const useLoginAction = routeAction$(async (data, requestEvent) => {
   const email = data.email as string;
   const password = data.password as string;
 
-  // TODO: Add actual authentication logic here
-  console.log('Login attempt:', email);
+  // Check against dummy accounts
+  const account = DUMMY_ACCOUNTS[email as keyof typeof DUMMY_ACCOUNTS];
+  
+  if (!account || account.password !== password) {
+    throw new Error('Invalid email or password');
+  }
 
-  // Redirect to client page on successful login
-  throw requestEvent.redirect(302, '/client');
+  // Create user object
+  const user: User = {
+    id: account.id,
+    email: email,
+    role: account.role,
+    name: account.name,
+    ...(account.role === 'client' 
+      ? { clientId: account.id } 
+      : { franchiseeId: account.id }
+    ),
+  };
+
+  // Set user session
+  setUserSession(requestEvent, user);
+
+  // Redirect based on user role
+  const redirectPath = user.role === 'franchisee' ? '/admin' : '/client';
+  throw requestEvent.redirect(302, redirectPath);
 });
 
 export default component$(() => {
@@ -45,6 +85,12 @@ export default component$(() => {
             </div>
 
             <Form action={loginAction} class="space-y-4">
+              {loginAction.value && (loginAction.value as any).failed && (
+                <div class="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600">
+                  {(loginAction.value as any).message || 'Invalid email or password'}
+                </div>
+              )}
+
               <div class="space-y-2">
                 <label for="email" class="text-sm font-medium text-neutral-700">Email</label>
                 <input
@@ -52,7 +98,7 @@ export default component$(() => {
                   name="email"
                   type="email"
                   class="w-full px-4 py-3 rounded-lg border border-neutral-200 focus:border-pink-400 focus:ring-2 focus:ring-pink-100 outline-none transition"
-                  placeholder="you@example.com"
+                  placeholder="bride@example.com"
                   required
                 />
               </div>
@@ -73,6 +119,13 @@ export default component$(() => {
                 Sign In
               </button>
             </Form>
+
+            {/* Dummy account info */}
+            <div class="mt-4 p-3 bg-neutral-50 rounded-lg text-xs text-neutral-600 space-y-1">
+              <p class="font-semibold">Test Accounts:</p>
+              <p>Client: <span class="font-mono">bride@example.com</span> / password</p>
+              <p>Franchisee: <span class="font-mono">franchisee@example.com</span> / password</p>
+            </div>
 
             {/* Divider */}
             <div class="relative">
