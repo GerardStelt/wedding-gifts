@@ -1,4 +1,5 @@
 import { component$, useSignal, useStore, $, useComputed$ } from '@builder.io/qwik';
+import { routeAction$ } from '@builder.io/qwik-city';
 import type { DocumentHead } from '@builder.io/qwik-city';
 import {
   HiUserPlusSolid,
@@ -17,6 +18,7 @@ import {
   HiSparklesSolid,
 } from '@qwikest/icons/heroicons';
 import type { Client, Invite, FranchiseeStats, InviteStatus, ClientStatus } from '~/lib/types';
+import { sendEmail } from '~/utils/ses-client';
 
 // Mock data for demonstration
 const mockClients: Client[] = [
@@ -104,11 +106,155 @@ const mockStats: FranchiseeStats = {
   thisMonthClients: 2,
 };
 
+// Generate a unique invitation token
+const generateInviteToken = () => {
+  return 'abc123'; // temp testing
+  return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+};
+
+// Route action to send invitation email
+export const useSendInviteEmailAction = routeAction$(async (data, requestEvent) => {
+  const { email, brideName, partnerName, weddingDate } = data as {
+    email: string;
+    brideName: string;
+    partnerName?: string;
+    weddingDate?: string;
+  };
+
+  // Generate invitation token
+  const token = generateInviteToken();
+  
+  // Get the base URL for the invitation link
+  const url = new URL(requestEvent.url);
+  const baseUrl = `${url.protocol}//${url.host}`;
+  const inviteLink = `${baseUrl}/invite/${token}`;
+
+  // Format wedding date if provided
+  const weddingDateFormatted = weddingDate
+    ? new Date(weddingDate).toLocaleDateString('nl-NL', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      })
+    : null;
+
+  // Create email subject
+  const subject = `🎉 You're Invited to Create Your Wedding Gift Registry!`;
+
+  // Create email body (HTML)
+  const body = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body {
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+          line-height: 1.6;
+          color: #333;
+          max-width: 600px;
+          margin: 0 auto;
+          padding: 20px;
+        }
+        .header {
+          background: linear-gradient(135deg, #ec4899 0%, #f43f5e 100%);
+          color: white;
+          padding: 30px;
+          border-radius: 12px 12px 0 0;
+          text-align: center;
+        }
+        .content {
+          background: #ffffff;
+          padding: 30px;
+          border: 1px solid #e5e7eb;
+          border-top: none;
+          border-radius: 0 0 12px 12px;
+        }
+        .button {
+          display: inline-block;
+          padding: 14px 28px;
+          background: linear-gradient(135deg, #ec4899 0%, #f43f5e 100%);
+          color: white;
+          text-decoration: none;
+          border-radius: 8px;
+          font-weight: 600;
+          margin: 20px 0;
+        }
+        .footer {
+          margin-top: 30px;
+          padding-top: 20px;
+          border-top: 1px solid #e5e7eb;
+          font-size: 12px;
+          color: #6b7280;
+          text-align: center;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1 style="margin: 0; font-size: 24px;">🎉 Congratulations, ${brideName}!</h1>
+      </div>
+      <div class="content">
+        <p>Dear ${brideName}${partnerName ? ` & ${partnerName}` : ''},</p>
+        
+        <p>You've been invited to create your personalized wedding gift registry!</p>
+        
+        ${weddingDateFormatted ? `<p>We're excited to help you prepare for your special day on <strong>${weddingDateFormatted}</strong>.</p>` : ''}
+        
+        <p>With our platform, you can:</p>
+        <ul>
+          <li>Browse our curated collection of wedding gifts</li>
+          <li>Create your personalized wishlist</li>
+          <li>Share your registry with family and friends</li>
+          <li>Track gifts and contributions in real-time</li>
+        </ul>
+        
+        <div style="text-align: center;">
+          <a href="${inviteLink}" class="button">Accept Invitation & Get Started</a>
+        </div>
+        
+        <p style="font-size: 14px; color: #6b7280;">
+          This invitation link will expire in 14 days. If you have any questions, please don't hesitate to contact us.
+        </p>
+      </div>
+      <div class="footer">
+        <p>This invitation was sent to ${email}</p>
+        <p>If you didn't expect this invitation, you can safely ignore this email.</p>
+      </div>
+    </body>
+    </html>
+  `;
+
+  try {
+    const result = await sendEmail(email, subject, body);
+    
+    if (result.success) {
+      return {
+        success: true,
+        token,
+        messageId: result.messageId,
+      };
+    } else {
+      return {
+        success: false,
+        error: result.error || 'Failed to send email',
+      };
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: (error as Error).message,
+    };
+  }
+});
+
 export default component$(() => {
   const searchQuery = useSignal('');
   const activeTab = useSignal<'clients' | 'invites'>('clients');
   const showInviteModal = useSignal(false);
-  
+  const isSendingInvite = useSignal(false);
+  const inviteError = useSignal<string | null>(null);
+
   // Invite form signals
   const inviteBrideName = useSignal('');
   const invitePartnerName = useSignal('');
@@ -118,6 +264,8 @@ export default component$(() => {
   const clients = useStore<{ items: Client[] }>({ items: [...mockClients] });
   const invites = useStore<{ items: Invite[] }>({ items: [...mockInvites] });
   const stats = useStore<FranchiseeStats>({ ...mockStats });
+
+  const sendInviteEmailAction = useSendInviteEmailAction();
 
   const filteredClients = useComputed$(() => {
     return clients.items.filter(client =>
@@ -134,29 +282,50 @@ export default component$(() => {
     );
   });
 
-  const sendInvite = $(() => {
+  const sendInvite = $(async () => {
     if (!inviteEmail.value || !inviteBrideName.value) return;
 
-    const newInvite: Invite = {
-      id: Date.now().toString(),
-      email: inviteEmail.value,
-      brideName: inviteBrideName.value,
-      partnerName: invitePartnerName.value || undefined,
-      weddingDate: inviteWeddingDate.value ? new Date(inviteWeddingDate.value) : undefined,
-      sentAt: new Date(),
-      expiresAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14 days
-      status: 'pending',
-    };
+    isSendingInvite.value = true;
+    inviteError.value = null;
 
-    invites.items.unshift(newInvite);
-    stats.pendingInvites++;
+    try {
+      const result = await sendInviteEmailAction.submit({
+        email: inviteEmail.value,
+        brideName: inviteBrideName.value,
+        partnerName: invitePartnerName.value || undefined,
+        weddingDate: inviteWeddingDate.value || undefined,
+      });
 
-    // Reset form
-    inviteBrideName.value = '';
-    invitePartnerName.value = '';
-    inviteEmail.value = '';
-    inviteWeddingDate.value = '';
-    showInviteModal.value = false;
+      if (result.value?.success) {
+        // Create invite record with the token from the server
+        const newInvite: Invite = {
+          id: Date.now().toString(),
+          email: inviteEmail.value,
+          brideName: inviteBrideName.value,
+          partnerName: invitePartnerName.value || undefined,
+          weddingDate: inviteWeddingDate.value ? new Date(inviteWeddingDate.value) : undefined,
+          sentAt: new Date(),
+          expiresAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14 days
+          status: 'pending',
+        };
+
+        invites.items.unshift(newInvite);
+        stats.pendingInvites++;
+
+        // Reset form
+        inviteBrideName.value = '';
+        invitePartnerName.value = '';
+        inviteEmail.value = '';
+        inviteWeddingDate.value = '';
+        showInviteModal.value = false;
+      } else {
+        inviteError.value = result.value?.error || 'Failed to send invitation email';
+      }
+    } catch (error) {
+      inviteError.value = (error as Error).message || 'An unexpected error occurred';
+    } finally {
+      isSendingInvite.value = false;
+    }
   });
 
   const resendInvite = $((inviteId: string) => {
@@ -297,33 +466,29 @@ export default component$(() => {
             <div class="flex gap-2">
               <button
                 onClick$={() => activeTab.value = 'clients'}
-                class={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all duration-200 ${
-                  activeTab.value === 'clients'
+                class={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all duration-200 ${activeTab.value === 'clients'
                     ? 'bg-pink-500 text-white shadow-md'
                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                }`}
+                  }`}
               >
                 <HiUserGroupSolid class="w-4 h-4" />
                 Clients
-                <span class={`px-2 py-0.5 rounded-full text-xs ${
-                  activeTab.value === 'clients' ? 'bg-white/20' : 'bg-slate-200'
-                }`}>
+                <span class={`px-2 py-0.5 rounded-full text-xs ${activeTab.value === 'clients' ? 'bg-white/20' : 'bg-slate-200'
+                  }`}>
                   {clients.items.length}
                 </span>
               </button>
               <button
                 onClick$={() => activeTab.value = 'invites'}
-                class={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all duration-200 ${
-                  activeTab.value === 'invites'
+                class={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all duration-200 ${activeTab.value === 'invites'
                     ? 'bg-pink-500 text-white shadow-md'
                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                }`}
+                  }`}
               >
                 <HiEnvelopeSolid class="w-4 h-4" />
                 Invitations
-                <span class={`px-2 py-0.5 rounded-full text-xs ${
-                  activeTab.value === 'invites' ? 'bg-white/20' : 'bg-slate-200'
-                }`}>
+                <span class={`px-2 py-0.5 rounded-full text-xs ${activeTab.value === 'invites' ? 'bg-white/20' : 'bg-slate-200'
+                  }`}>
                   {invites.items.length}
                 </span>
               </button>
@@ -553,6 +718,12 @@ export default component$(() => {
 
             {/* Form */}
             <div class="p-6 space-y-4">
+              {inviteError.value && (
+                <div class="p-3 rounded-xl bg-red-50 border border-red-200">
+                  <p class="text-sm text-red-600">{inviteError.value}</p>
+                </div>
+              )}
+
               <div>
                 <label for="bride-name" class="block text-sm font-medium text-slate-700 mb-1.5">
                   Bride's Name *
@@ -563,6 +734,7 @@ export default component$(() => {
                   bind:value={inviteBrideName}
                   placeholder="e.g., Sophie de Vries"
                   class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-pink-400 focus:ring-2 focus:ring-pink-100 outline-none transition"
+                  disabled={isSendingInvite.value}
                 />
               </div>
 
@@ -576,6 +748,7 @@ export default component$(() => {
                   bind:value={invitePartnerName}
                   placeholder="e.g., Thomas Bakker"
                   class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-pink-400 focus:ring-2 focus:ring-pink-100 outline-none transition"
+                  disabled={isSendingInvite.value}
                 />
               </div>
 
@@ -589,6 +762,7 @@ export default component$(() => {
                   bind:value={inviteEmail}
                   placeholder="sophie@example.com"
                   class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-pink-400 focus:ring-2 focus:ring-pink-100 outline-none transition"
+                  disabled={isSendingInvite.value}
                 />
               </div>
 
@@ -602,22 +776,40 @@ export default component$(() => {
                   bind:value={inviteWeddingDate}
                   title="Select the wedding date"
                   class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-pink-400 focus:ring-2 focus:ring-pink-100 outline-none transition"
+                  disabled={isSendingInvite.value}
                 />
               </div>
 
               <div class="flex gap-3 pt-4">
                 <button
-                  onClick$={() => showInviteModal.value = false}
-                  class="flex-1 px-4 py-3 rounded-xl border border-slate-200 text-slate-600 font-medium hover:bg-slate-50 transition-colors"
+                  onClick$={() => {
+                    showInviteModal.value = false;
+                    inviteError.value = null;
+                  }}
+                  class="flex-1 px-4 py-3 rounded-xl border border-slate-200 text-slate-600 font-medium hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={isSendingInvite.value}
                 >
                   Cancel
                 </button>
                 <button
                   onClick$={sendInvite}
-                  class="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-linear-to-r from-pink-500 to-rose-500 text-white font-semibold shadow-lg shadow-pink-200 hover:shadow-xl transition-all"
+                  class="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-linear-to-r from-pink-500 to-rose-500 text-white font-semibold shadow-lg shadow-pink-200 hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={isSendingInvite.value || !inviteEmail.value || !inviteBrideName.value}
                 >
-                  <HiPaperAirplaneSolid class="w-4 h-4" />
-                  Send Invite
+                  {isSendingInvite.value ? (
+                    <>
+                      <svg class="animate-spin w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Sending...
+                    </>
+                  ) : (
+                    <>
+                      <HiPaperAirplaneSolid class="w-4 h-4" />
+                      Send Invite
+                    </>
+                  )}
                 </button>
               </div>
             </div>

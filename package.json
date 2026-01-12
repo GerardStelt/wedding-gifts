@@ -26,6 +26,7 @@
     "@builder.io/qwik": "^1.18.0",
     "@builder.io/qwik-city": "^1.18.0",
     "@eslint/js": "latest",
+    "@qwikest/icons": "^0.0.13",
     "@tailwindcss/vite": "^4.1.4",
     "@types/node": "20.19.0",
     "eslint": "9.32.0",
@@ -39,7 +40,9 @@
     "typescript-plugin-css-modules": "latest",
     "undici": "*",
     "vite": "7.2.6",
-    "vite-tsconfig-paths": "^4.2.1",
-    "@qwikest/icons": "^0.0.13"
+    "vite-tsconfig-paths": "^4.2.1"
+  },
+  "dependencies": {
+    "@aws-sdk/client-ses": "^3.965.0"
   }
 }
