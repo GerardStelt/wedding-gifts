@@ -1,5 +1,6 @@
 import { component$, useSignal, $ } from '@builder.io/qwik';
 import { Form, routeAction$, Link } from '@builder.io/qwik-city';
+import Stripe from 'stripe';
 import {
   HiBuildingStorefrontSolid,
   HiUserSolid,
@@ -11,7 +12,7 @@ import {
   HiSparklesSolid,
 } from '@qwikest/icons/heroicons';
 
-export const useRegisterAction = routeAction$(async (data, requestEvent) => {
+export const useRegisterAction = routeAction$(async (data, { env, redirect, url }) => {
   // Extract form data
   const formData = {
     companyName: data.companyName as string,
@@ -25,8 +26,39 @@ export const useRegisterAction = routeAction$(async (data, requestEvent) => {
   // TODO: Add actual registration logic here
   console.log('Franchisee registration:', formData);
 
+  // Stripe payment
+  let sessionUrl: string | null = null;
+
+  try {
+    const stripe = new Stripe(env.get('STRIPE_SECRET_ACCESS_KEY')!);
+    const session = await stripe.checkout.sessions.create({
+      // payment_method_types: ['card', 'pix', 'boleto'],
+      payment_method_types: ['card'],
+      line_items: [{
+        price_data: {
+          currency: 'brl',
+          product_data: { name: 'Cadeau voor Brazilië' },
+          unit_amount: 5000,
+        },
+        quantity: 1,
+      }],
+      mode: 'payment',
+      tax_id_collection: { enabled: true },
+      success_url: `${url.origin}/admin?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${url.origin}/cancel`,
+    });
+    sessionUrl = session.url;
+  } catch (err: any) {
+    console.error('Stripe Error:', err.message);
+    return { success: false, error: err.message };
+  }
+
+  if (sessionUrl) {
+    throw redirect(303, sessionUrl);
+  }
+
   // Redirect to admin dashboard on successful registration
-  throw requestEvent.redirect(302, '/admin');
+  // throw redirect(302, '/admin');
 });
 
 export default component$(() => {
@@ -106,7 +138,7 @@ export default component$(() => {
               <p class="text-slate-500 text-sm mt-1">Fill in your details to get started</p>
             </div>
 
-            <Form action={registerAction} class="space-y-5">
+            <form action="/api/checkout" method="POST" class="space-y-5">
               {/* Company Name */}
               <div class="space-y-1.5">
                 <label for="companyName" class="text-sm font-medium text-slate-700">
@@ -253,7 +285,7 @@ export default component$(() => {
               >
                 Create Franchisee Account
               </button>
-            </Form>
+            </form>
           </div>
 
           {/* Mobile sign in link */}

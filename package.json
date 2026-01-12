@@ -43,6 +43,7 @@
     "vite-tsconfig-paths": "^4.2.1"
   },
   "dependencies": {
-    "@aws-sdk/client-ses": "^3.965.0"
+    "@aws-sdk/client-ses": "^3.965.0",
+    "stripe": "^20.1.2"
   }
 }
