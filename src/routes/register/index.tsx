@@ -1,5 +1,6 @@
 import { component$, useSignal, $ } from '@builder.io/qwik';
-import { Link } from '@builder.io/qwik-city';
+import { Link, Form, routeAction$ } from '@builder.io/qwik-city';
+import Stripe from 'stripe';
 import {
   HiBuildingStorefrontSolid,
   HiUserSolid,
@@ -11,57 +12,61 @@ import {
   HiSparklesSolid,
 } from '@qwikest/icons/heroicons';
 
-// export const useRegisterAction = routeAction$(async (data, { env, redirect, url }) => {
-//   // Extract form data
-//   const formData = {
-//     companyName: data.companyName as string,
-//     contactName: data.contactName as string,
-//     email: data.email as string,
-//     phone: data.phone as string,
-//     city: data.city as string,
-//     password: data.password as string,
-//   };
+export const useRegisterAction = routeAction$(async (data, requestEvent) => {
+  // Extract form data
+  const formData = {
+    companyName: data.companyName as string,
+    contactName: data.contactName as string,
+    email: data.email as string,
+    phone: data.phone as string,
+    city: data.city as string,
+    password: data.password as string,
+  };
 
-//   // TODO: Add actual registration logic here
-//   console.log('Franchisee registration:', formData);
+  // TODO: Add actual registration logic here
+  console.log('Franchisee registration:', formData);
 
-//   // Stripe payment
-//   let sessionUrl: string | null = null;
+  // Stripe payment - using same logic as /api/checkout
+  const stripe = new Stripe(requestEvent.env.get('STRIPE_SECRET_ACCESS_KEY')!);
+  let stripeUrl: string | null = null;
 
-//   try {
-//     const stripe = new Stripe(env.get('STRIPE_SECRET_ACCESS_KEY')!);
-//     const session = await stripe.checkout.sessions.create({
-//       // payment_method_types: ['card', 'pix', 'boleto'],
-//       payment_method_types: ['card'],
-//       line_items: [{
-//         price_data: {
-//           currency: 'brl',
-//           product_data: { name: 'Cadeau voor Brazilië' },
-//           unit_amount: 5000,
-//         },
-//         quantity: 1,
-//       }],
-//       mode: 'payment',
-//       tax_id_collection: { enabled: true },
-//       success_url: `${url.origin}/admin?session_id={CHECKOUT_SESSION_ID}`,
-//       cancel_url: `${url.origin}/cancel`,
-//     });
-//     sessionUrl = session.url;
-//   } catch (err: any) {
-//     console.error('Stripe Error:', err.message);
-//     return { success: false, error: err.message };
-//   }
+  try {
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: [{
+        price_data: {
+          currency: 'brl',
+          product_data: { name: 'Cadeau voor Brazilië' },
+          unit_amount: 5000,
+        },
+        quantity: 1,
+      }],
+      mode: 'payment',
+      payment_method_options: {
+        pix: {
+          expires_after_seconds: 3600,
+        },
+      },
+      success_url: `${requestEvent.url.origin}/admin?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${requestEvent.url.origin}/cancel`,
+    });
 
-//   if (sessionUrl) {
-//     throw redirect(303, sessionUrl);
-//   }
+    stripeUrl = session.url;
+  } catch (err: any) {
+    console.error('Stripe Error:', err.message);
+    throw requestEvent.redirect(302, '/?error=stripe_failed');
+  }
 
-//   // Redirect to admin dashboard on successful registration
-//   // throw redirect(302, '/admin');
-// });
+  // Redirect to Stripe checkout
+  if (stripeUrl) {
+    throw requestEvent.redirect(303, stripeUrl);
+  }
+
+  return { success: false, error: 'Failed to create checkout session' };
+});
 
 export default component$(() => {
-  // const registerAction = useRegisterAction();
+  const registerAction = useRegisterAction();
   const agreedToTerms = useSignal(false);
   const showPassword = useSignal(false);
 
@@ -137,7 +142,7 @@ export default component$(() => {
               <p class="text-slate-500 text-sm mt-1">Fill in your details to get started</p>
             </div>
 
-            <form action="/api/checkout" method="POST" class="space-y-5">
+            <Form action={registerAction} reloadDocument class="space-y-5">
               {/* Company Name */}
               <div class="space-y-1.5">
                 <label for="companyName" class="text-sm font-medium text-slate-700">
@@ -284,7 +289,7 @@ export default component$(() => {
               >
                 Create Franchisee Account
               </button>
-            </form>
+            </Form>
           </div>
 
           {/* Mobile sign in link */}
