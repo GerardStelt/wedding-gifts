@@ -1,5 +1,5 @@
 import { component$, useSignal, useStore, $, useComputed$ } from '@builder.io/qwik';
-import { routeAction$ } from '@builder.io/qwik-city';
+import { routeAction$, useNavigate } from '@builder.io/qwik-city';
 import type { DocumentHead } from '@builder.io/qwik-city';
 import {
   HiUserPlusSolid,
@@ -254,6 +254,7 @@ export default component$(() => {
   const showInviteModal = useSignal(false);
   const isSendingInvite = useSignal(false);
   const inviteError = useSignal<string | null>(null);
+  const nav = useNavigate();
 
   // Invite form signals
   const inviteBrideName = useSignal('');
@@ -318,6 +319,9 @@ export default component$(() => {
         inviteEmail.value = '';
         inviteWeddingDate.value = '';
         showInviteModal.value = false;
+
+        // Navigate to invite page for testing
+        nav('/invite/abc123');
       } else {
         inviteError.value = result.value?.error || 'Failed to send invitation email';
       }

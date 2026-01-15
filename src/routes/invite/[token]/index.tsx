@@ -210,7 +210,7 @@ export default component$(() => {
               <p class="text-gray-500 text-sm mt-1">Fill in your details to get started</p>
             </div>
 
-            <Form action={acceptAction} class="space-y-5">
+            <Form action={acceptAction} reloadDocument class="space-y-5">
               {/* Bride Name */}
               <div class="space-y-1.5">
                 <label for="brideName" class="text-sm font-medium text-gray-700">

@@ -1,10 +1,12 @@
 import { component$, useSignal, useStore, $, useComputed$ } from '@builder.io/qwik';
 import type { DocumentHead } from '@builder.io/qwik-city';
-import { HiPlusCircleSolid, HiTrashSolid, HiGiftSolid, HiBanknotesOutline, HiCheckCircleSolid, HiMagnifyingGlassSolid, HiFunnelSolid, HiSparklesSolid, HiXMarkSolid } from '@qwikest/icons/heroicons';
+import { useNavigate } from '@builder.io/qwik-city';
+import { HiPlusCircleSolid, HiTrashSolid, HiGiftSolid, HiBanknotesOutline, HiCheckCircleSolid, HiMagnifyingGlassSolid, HiFunnelSolid, HiSparklesSolid, HiXMarkSolid, HiEnvelopeSolid } from '@qwikest/icons/heroicons';
 import { giftRepository } from '~/lib/data/gift-repository';
 import { categoryLabels, categoryEmojis, type Gift, type GiftCategory, type GiftPreference, type WishlistItem } from '~/lib/types';
 
 export default component$(() => {
+  const nav = useNavigate();
   const searchQuery = useSignal('');
   const selectedCategory = useSignal<GiftCategory | 'all'>('all');
   const wishlist = useStore<{ items: WishlistItem[] }>({ items: [] });
@@ -328,9 +330,18 @@ export default component$(() => {
                       €{totalValue.value.toLocaleString('nl-NL', { minimumFractionDigits: 2 })}
                     </span>
                   </div>
-                  <button class="w-full py-3 bg-linear-to-r from-pink-500 to-rose-500 text-white font-semibold rounded-2xl shadow-lg shadow-pink-200 hover:shadow-xl hover:shadow-pink-300 transition-all duration-300">
-                    Save Wishlist
-                  </button>
+                  <div class="flex flex-col gap-3">
+                    <button class="w-full py-3 bg-linear-to-r from-pink-500 to-rose-500 text-white font-semibold rounded-2xl shadow-lg shadow-pink-200 hover:shadow-xl hover:shadow-pink-300 transition-all duration-300">
+                      Save Wishlist
+                    </button>
+                    <button 
+                      onClick$={() => nav('/list/123')}
+                      class="w-full py-3 bg-linear-to-r from-emerald-500 to-teal-500 text-white font-semibold rounded-2xl shadow-lg shadow-emerald-200 hover:shadow-xl hover:shadow-emerald-300 transition-all duration-300 flex items-center justify-center gap-2"
+                    >
+                      <HiEnvelopeSolid class="w-5 h-5" />
+                      Invite Guests
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
