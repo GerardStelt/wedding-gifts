@@ -29,7 +29,11 @@ export const useLoginAction = routeAction$(async (data, requestEvent) => {
   const account = DUMMY_ACCOUNTS[email as keyof typeof DUMMY_ACCOUNTS];
   
   if (!account || account.password !== password) {
-    throw new Error('Invalid email or password');
+    return {
+      success: false,
+      failed: true,
+      message: 'Wrong credentials. Please check your email and password.',
+    };
   }
 
   // Create user object
@@ -55,7 +59,7 @@ export const useLoginAction = routeAction$(async (data, requestEvent) => {
 export default component$(() => {
   const loginAction = useLoginAction();
   return (
-    <div class="min-h-dvh grid grid-cols-1 lg:grid-cols-2">
+    <div class="min-h-screen grid grid-cols-1 lg:grid-cols-2 lg:min-h-dvh">
       {/* Left side - Branding (hidden on mobile) */}
       <div class="hidden lg:grid place-items-center bg-linear-to-br from-pink-500 to-rose-600 p-12">
         <div class="max-w-md text-center text-white space-y-6">
@@ -69,7 +73,7 @@ export default component$(() => {
       </div>
 
       {/* Right side - Login form */}
-      <div class="grid place-items-center bg-white px-4 py-12">
+      <div class="flex items-center justify-center bg-white px-4 py-12 min-h-screen lg:min-h-0 lg:grid lg:place-items-center">
         <div class="w-full max-w-sm space-y-8">
           {/* Mobile logo (shown only on small screens) */}
           <div class="lg:hidden text-center space-y-2">
@@ -85,9 +89,9 @@ export default component$(() => {
             </div>
 
             <Form action={loginAction} class="space-y-4">
-              {loginAction.value && (loginAction.value as any).failed && (
+              {loginAction.value?.failed && (
                 <div class="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600">
-                  {(loginAction.value as any).message || 'Invalid email or password'}
+                  {loginAction.value.message || 'Wrong credentials'}
                 </div>
               )}
 

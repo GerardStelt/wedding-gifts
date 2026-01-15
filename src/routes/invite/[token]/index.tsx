@@ -1,5 +1,5 @@
 import { component$, useSignal, $ } from '@builder.io/qwik';
-import { Form, routeAction$, routeLoader$, Link, useLocation } from '@builder.io/qwik-city';
+import { Form, routeAction$, routeLoader$, Link } from '@builder.io/qwik-city';
 import type { DocumentHead } from '@builder.io/qwik-city';
 import {
   HiHeartSolid,
@@ -71,7 +71,7 @@ export const useAcceptInviteAction = routeAction$(async (data, requestEvent) => 
 });
 
 export default component$(() => {
-  const location = useLocation();
+  // const location = useLocation();
   const inviteData = useInviteLoader();
   const acceptAction = useAcceptInviteAction();
   const showPassword = useSignal(false);

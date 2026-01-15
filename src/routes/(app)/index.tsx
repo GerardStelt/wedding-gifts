@@ -8,7 +8,7 @@ import HeroURL from '~/media/hero-wedding.jpg?url';
 export default component$(() => {
   return (
     <>
-      <section class="relative h-screen bg-linear-to-br from-pink-50 via-rose-50 to-amber-50 overflow-hidden">
+      <section class="relative min-h-screen bg-linear-to-br from-pink-50 via-rose-50 to-amber-50 overflow-hidden">
         {/* Decorative background blurs */}
         <div class="absolute -top-32 -left-32 w-96 h-96 bg-pink-200/60 rounded-full blur-3xl" />
         <div class="absolute top-1/4 right-0 w-80 h-80 bg-rose-200/50 rounded-full blur-3xl" />
@@ -47,14 +47,14 @@ export default component$(() => {
                 
                 <div class="flex flex-col sm:flex-row gap-4 justify-center items-center pt-6">
                   <a 
-                    href="/registry" 
+                    href="/list/default" 
                     class="group flex items-center gap-2 px-8 py-4 bg-linear-to-r from-pink-500 to-rose-500 text-white text-lg font-semibold rounded-2xl shadow-lg shadow-pink-200 hover:shadow-xl hover:shadow-pink-300 hover:-translate-y-0.5 transition-all duration-300"
                   >
                     <HiGiftSolid class="w-5 h-5" />
                     View Registry
                   </a>
                   <a 
-                    href="/manage" 
+                    href="/client" 
                     class="group flex items-center gap-2 px-8 py-4 bg-white text-gray-700 text-lg font-semibold rounded-2xl shadow-lg shadow-gray-200/50 hover:shadow-xl hover:bg-pink-50 hover:-translate-y-0.5 border border-pink-100 transition-all duration-300"
                   >
                     <HiSparklesSolid class="w-5 h-5 text-pink-500" />

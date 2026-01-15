@@ -1,9 +1,9 @@
 import { type RequestHandler } from '@builder.io/qwik-city';
 import Stripe from 'stripe';
 
-export const onPost: RequestHandler = async ({ request, env, redirect, url }) => {
+export const onPost: RequestHandler = async ({ env, redirect, url }) => {
   const stripe = new Stripe(env.get('STRIPE_SECRET_ACCESS_KEY')!);
-  const formData = await request.formData();
+  // const formData = await request.formData();
 
   let stripeUrl: string | null = null;
 

@@ -1,6 +1,5 @@
 import { component$, useSignal, $ } from '@builder.io/qwik';
-import { Form, routeAction$, Link } from '@builder.io/qwik-city';
-import Stripe from 'stripe';
+import { Link } from '@builder.io/qwik-city';
 import {
   HiBuildingStorefrontSolid,
   HiUserSolid,
@@ -12,57 +11,57 @@ import {
   HiSparklesSolid,
 } from '@qwikest/icons/heroicons';
 
-export const useRegisterAction = routeAction$(async (data, { env, redirect, url }) => {
-  // Extract form data
-  const formData = {
-    companyName: data.companyName as string,
-    contactName: data.contactName as string,
-    email: data.email as string,
-    phone: data.phone as string,
-    city: data.city as string,
-    password: data.password as string,
-  };
+// export const useRegisterAction = routeAction$(async (data, { env, redirect, url }) => {
+//   // Extract form data
+//   const formData = {
+//     companyName: data.companyName as string,
+//     contactName: data.contactName as string,
+//     email: data.email as string,
+//     phone: data.phone as string,
+//     city: data.city as string,
+//     password: data.password as string,
+//   };
 
-  // TODO: Add actual registration logic here
-  console.log('Franchisee registration:', formData);
+//   // TODO: Add actual registration logic here
+//   console.log('Franchisee registration:', formData);
 
-  // Stripe payment
-  let sessionUrl: string | null = null;
+//   // Stripe payment
+//   let sessionUrl: string | null = null;
 
-  try {
-    const stripe = new Stripe(env.get('STRIPE_SECRET_ACCESS_KEY')!);
-    const session = await stripe.checkout.sessions.create({
-      // payment_method_types: ['card', 'pix', 'boleto'],
-      payment_method_types: ['card'],
-      line_items: [{
-        price_data: {
-          currency: 'brl',
-          product_data: { name: 'Cadeau voor Brazilië' },
-          unit_amount: 5000,
-        },
-        quantity: 1,
-      }],
-      mode: 'payment',
-      tax_id_collection: { enabled: true },
-      success_url: `${url.origin}/admin?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${url.origin}/cancel`,
-    });
-    sessionUrl = session.url;
-  } catch (err: any) {
-    console.error('Stripe Error:', err.message);
-    return { success: false, error: err.message };
-  }
+//   try {
+//     const stripe = new Stripe(env.get('STRIPE_SECRET_ACCESS_KEY')!);
+//     const session = await stripe.checkout.sessions.create({
+//       // payment_method_types: ['card', 'pix', 'boleto'],
+//       payment_method_types: ['card'],
+//       line_items: [{
+//         price_data: {
+//           currency: 'brl',
+//           product_data: { name: 'Cadeau voor Brazilië' },
+//           unit_amount: 5000,
+//         },
+//         quantity: 1,
+//       }],
+//       mode: 'payment',
+//       tax_id_collection: { enabled: true },
+//       success_url: `${url.origin}/admin?session_id={CHECKOUT_SESSION_ID}`,
+//       cancel_url: `${url.origin}/cancel`,
+//     });
+//     sessionUrl = session.url;
+//   } catch (err: any) {
+//     console.error('Stripe Error:', err.message);
+//     return { success: false, error: err.message };
+//   }
 
-  if (sessionUrl) {
-    throw redirect(303, sessionUrl);
-  }
+//   if (sessionUrl) {
+//     throw redirect(303, sessionUrl);
+//   }
 
-  // Redirect to admin dashboard on successful registration
-  // throw redirect(302, '/admin');
-});
+//   // Redirect to admin dashboard on successful registration
+//   // throw redirect(302, '/admin');
+// });
 
 export default component$(() => {
-  const registerAction = useRegisterAction();
+  // const registerAction = useRegisterAction();
   const agreedToTerms = useSignal(false);
   const showPassword = useSignal(false);
 
@@ -81,14 +80,14 @@ export default component$(() => {
   return (
     <div class="min-h-dvh grid grid-cols-1 lg:grid-cols-2">
       {/* Left side - Benefits (hidden on mobile) */}
-      <div class="hidden lg:flex flex-col justify-center bg-linear-to-br from-teal-500 to-emerald-600 p-12">
+      <div class="hidden lg:flex flex-col justify-center bg-linear-to-br from-pink-500 to-rose-600 p-12">
         <div class="max-w-md mx-auto text-white space-y-8">
           <div>
             <div class="w-16 h-16 rounded-2xl bg-white/20 flex items-center justify-center mb-6">
               <HiBuildingStorefrontSolid class="w-8 h-8 text-white" />
             </div>
             <h1 class="text-4xl font-bold mb-4">Become a Franchisee</h1>
-            <p class="text-teal-100 text-lg">
+            <p class="text-pink-100 text-lg">
               Join our network of wedding gift specialists and grow your business with us.
             </p>
           </div>
@@ -101,15 +100,15 @@ export default component$(() => {
             <ul class="space-y-3">
               {benefits.map((benefit, index) => (
                 <li key={index} class="flex items-start gap-3">
-                  <HiCheckCircleSolid class="w-5 h-5 text-teal-200 mt-0.5 shrink-0" />
-                  <span class="text-teal-50">{benefit}</span>
+                  <HiCheckCircleSolid class="w-5 h-5 text-pink-200 mt-0.5 shrink-0" />
+                  <span class="text-pink-50">{benefit}</span>
                 </li>
               ))}
             </ul>
           </div>
 
           <div class="pt-6 border-t border-white/20">
-            <p class="text-teal-100 text-sm">
+            <p class="text-pink-100 text-sm">
               Already a partner?{' '}
               <Link href="/login" class="text-white font-semibold hover:underline">
                 Sign in here
@@ -124,7 +123,7 @@ export default component$(() => {
         <div class="w-full max-w-md space-y-8">
           {/* Mobile header (shown only on small screens) */}
           <div class="lg:hidden text-center space-y-2">
-            <div class="w-14 h-14 mx-auto rounded-2xl bg-linear-to-br from-teal-500 to-emerald-600 flex items-center justify-center">
+            <div class="w-14 h-14 mx-auto rounded-2xl bg-linear-to-br from-pink-500 to-rose-600 flex items-center justify-center">
               <HiBuildingStorefrontSolid class="w-7 h-7 text-white" />
             </div>
             <h1 class="text-2xl font-bold text-slate-800">Become a Franchisee</h1>
@@ -150,7 +149,7 @@ export default component$(() => {
                     id="companyName"
                     name="companyName"
                     type="text"
-                    class="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 focus:border-teal-400 focus:ring-2 focus:ring-teal-100 outline-none transition"
+                    class="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 focus:border-pink-400 focus:ring-2 focus:ring-pink-100 outline-none transition"
                     placeholder="Your Business Name"
                     required
                   />
@@ -168,7 +167,7 @@ export default component$(() => {
                     id="contactName"
                     name="contactName"
                     type="text"
-                    class="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 focus:border-teal-400 focus:ring-2 focus:ring-teal-100 outline-none transition"
+                    class="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 focus:border-pink-400 focus:ring-2 focus:ring-pink-100 outline-none transition"
                     placeholder="John Doe"
                     required
                   />
@@ -187,7 +186,7 @@ export default component$(() => {
                       id="email"
                       name="email"
                       type="email"
-                      class="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 focus:border-teal-400 focus:ring-2 focus:ring-teal-100 outline-none transition"
+                      class="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 focus:border-pink-400 focus:ring-2 focus:ring-pink-100 outline-none transition"
                       placeholder="you@example.com"
                       required
                     />
@@ -204,7 +203,7 @@ export default component$(() => {
                       id="phone"
                       name="phone"
                       type="tel"
-                      class="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 focus:border-teal-400 focus:ring-2 focus:ring-teal-100 outline-none transition"
+                      class="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 focus:border-pink-400 focus:ring-2 focus:ring-pink-100 outline-none transition"
                       placeholder="+31 6 12345678"
                       required
                     />
@@ -223,7 +222,7 @@ export default component$(() => {
                     id="city"
                     name="city"
                     type="text"
-                    class="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 focus:border-teal-400 focus:ring-2 focus:ring-teal-100 outline-none transition"
+                    class="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 focus:border-pink-400 focus:ring-2 focus:ring-pink-100 outline-none transition"
                     placeholder="Amsterdam"
                     required
                   />
@@ -241,7 +240,7 @@ export default component$(() => {
                     id="password"
                     name="password"
                     type={showPassword.value ? 'text' : 'password'}
-                    class="w-full pl-11 pr-20 py-3 rounded-xl border border-slate-200 focus:border-teal-400 focus:ring-2 focus:ring-teal-100 outline-none transition"
+                    class="w-full pl-11 pr-20 py-3 rounded-xl border border-slate-200 focus:border-pink-400 focus:ring-2 focus:ring-pink-100 outline-none transition"
                     placeholder="••••••••"
                     minLength={8}
                     required
@@ -263,16 +262,16 @@ export default component$(() => {
                   id="terms"
                   type="checkbox"
                   bind:checked={agreedToTerms}
-                  class="mt-1 w-4 h-4 rounded border-slate-300 text-teal-500 focus:ring-teal-400"
+                  class="mt-1 w-4 h-4 rounded border-slate-300 accent-pink-500 focus:ring-pink-400"
                   required
                 />
                 <label for="terms" class="text-sm text-slate-600">
                   I agree to the{' '}
-                  <a href="/terms" class="text-teal-600 hover:underline font-medium">
+                  <a href="/terms" class="text-pink-600 hover:underline font-medium">
                     Terms of Service
                   </a>{' '}
                   and{' '}
-                  <a href="/privacy" class="text-teal-600 hover:underline font-medium">
+                  <a href="/privacy" class="text-pink-600 hover:underline font-medium">
                     Privacy Policy
                   </a>
                 </label>
@@ -281,7 +280,7 @@ export default component$(() => {
               {/* Submit button */}
               <button
                 type="submit"
-                class="w-full py-3.5 bg-linear-to-r from-teal-500 to-emerald-500 text-white font-semibold rounded-xl shadow-lg shadow-teal-200 hover:shadow-xl hover:shadow-teal-300 hover:-translate-y-0.5 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
+                class="w-full py-3.5 bg-linear-to-r from-pink-500 to-rose-500 text-white font-semibold rounded-xl shadow-lg shadow-pink-200 hover:shadow-xl hover:shadow-pink-300 hover:-translate-y-0.5 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
               >
                 Create Franchisee Account
               </button>
@@ -291,7 +290,7 @@ export default component$(() => {
           {/* Mobile sign in link */}
           <p class="lg:hidden text-center text-sm text-slate-500">
             Already a partner?{' '}
-            <Link href="/login" class="text-teal-600 font-semibold hover:underline">
+            <Link href="/login" class="text-pink-600 font-semibold hover:underline">
               Sign in here
             </Link>
           </p>
